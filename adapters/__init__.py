@@ -1,3 +1,7 @@
-from .timely import is_timely_slug_response, extract_title_and_description
+from . import timely
 
-__all__ = ["is_timely_slug_response", "extract_title_and_description"]
+ADAPTERS = [
+    timely,
+]
+
+__all__ = ["ADAPTERS"]

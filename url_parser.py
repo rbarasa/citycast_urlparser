@@ -8,7 +8,7 @@ import requests
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 from urllib.parse import urlsplit
-from adapters import is_timely_slug_response, extract_title_and_description
+from adapters import ADAPTERS
 
 
 @dataclass
@@ -48,7 +48,7 @@ def fetch_with_requests(url: str, timeout: int = 25) -> Tuple[int, str]:
 
 
 def fetch_with_playwright(url: str, timeout_ms: int = 60000) -> Tuple[str, Optional[Dict[str, Any]]]:
-    timely_payload: Optional[Dict[str, Any]] = None
+    extracted: Optional[Dict[str, Any]] = None
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -62,26 +62,34 @@ def fetch_with_playwright(url: str, timeout_ms: int = 60000) -> Tuple[str, Optio
         page = context.new_page()
 
         def on_response(resp):
-            nonlocal timely_payload
-            if timely_payload is not None:
+            nonlocal extracted
+            if extracted is not None:
                 return
+
             ct = (resp.headers.get("content-type") or "").lower()
             if "json" not in ct:
                 return
-            if is_timely_slug_response(resp.url):
+
+            for adapter in ADAPTERS:
                 try:
-                    timely_payload = resp.json()
+                    if not adapter.match_response(resp.url, ct):
+                        continue
+                    payload = resp.json()
+                    fields = adapter.extract_event(payload)
+
+                    if (fields.get("title") or "").strip() or (fields.get("description") or "").strip():
+                        extracted = fields
+                        return
                 except Exception:
-                    pass
+                    continue
 
         page.on("response", on_response)
-
         page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
         page.wait_for_timeout(4000)
 
         html = page.content()
         browser.close()
-        return html, timely_payload
+        return html, extracted
 
 
 def extract_from_ld_json(soup: BeautifulSoup) -> Dict[str, Any]:
@@ -134,10 +142,10 @@ def parse_event(url: str) -> EventCard:
     soup = BeautifulSoup(html, "html.parser")
     card = EventCard(url=url, source=source)
 
-    if timely_payload:
-        fields = extract_title_and_description(timely_payload)
-        card.title = fields.get("title")
-        card.description = fields.get("description")
+    html, extracted = fetch_with_playwright(url)
+    if extracted:
+        card.title = extracted.get("title")
+        card.description = extracted.get("description")
 
     ld = extract_from_ld_json(soup)
     if ld:
