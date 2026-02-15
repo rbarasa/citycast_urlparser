@@ -1,4 +1,0 @@
-echo "postBuild running"
-python -m playwright --version
-python -m playwright install --with-deps chromium
-echo "postBuild finished"
