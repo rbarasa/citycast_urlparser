@@ -22,4 +22,5 @@ def extract_event(payload: Dict[str, Any]) -> Dict[str, Optional[str]]:
     return {
         "title": _clean_text(d.get("title")),
         "description": _clean_text(d.get("description_short")),
+        "aria_label": _clean_text(d.get("aria_label")),
     }
