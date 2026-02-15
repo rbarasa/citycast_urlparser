@@ -7,6 +7,20 @@ import streamlit as st
 
 from url_parser import PlaywrightSession, parse_event, EventCard
 
+import os
+import subprocess
+
+def ensure_chromium_installed() -> None:
+    cache_dir = os.path.expanduser("~/.cache/ms-playwright")
+    # If cache dir does not exist or is empty, browsers are not installed
+    if not os.path.isdir(cache_dir) or not os.listdir(cache_dir):
+        st.info("setting up browser runtime (one time)")
+        subprocess.run(
+            ["python", "-m", "playwright", "install", "chromium"],
+            check=True
+        )
+
+
 REQUIRED_FIELDS = ["title", "description"]
 
 OPTIONAL_FIELDS = ["start_date", "end_date", "location"]
@@ -92,6 +106,7 @@ DAY_HEADER_RE = re.compile(
 URL_RE = re.compile(r"^https?://\S+$", re.IGNORECASE)
 
 def get_playwright_session():
+    ensure_chromium_installed()
     return PlaywrightSession(headless=True)
 
 def parse_pasted_text(text: str) -> List[Dict[str, Any]]:
