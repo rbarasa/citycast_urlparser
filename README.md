@@ -36,18 +36,19 @@ All extracted data is stored in a consistent event structure, ensuring uniform o
 
 ## Live Application
 
-The application is deployed on Streamlit and can be accessed here:
+The application is deployed using PythonAnywhere and can be accessed here:
 
-**[Launch the website here](https://citycast-urlparser.streamlit.app)**
+**[Launch the website here](https://citycast-urlparser-rbarasa.pythonanywhere.com/)**
 
 No installation or programming experience is required.
 
 ## How to Use
-1. Open the Streamlit application link
+1. Open the web application link above
 2. Paste one or more event URLs into the input field
 3. Click the extraction button
-4. Review the structured event details displayed
-5. Download the results if needed
+4. Allow the system a bit of time to finish running
+5. Review the structured event details displayed
+6. Download the results if needed
 
 ## Limitations
 - Event websites vary significantly in structure
